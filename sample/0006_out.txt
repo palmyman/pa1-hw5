@@ -1,0 +1,2 @@
+Zadejte matici:
+Nespravny vstup.
