@@ -7,6 +7,9 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <iomanip>
+#include <stdio.h>
+#include <string.h>
 
 using namespace std;
 
@@ -16,8 +19,11 @@ public:
     ~CMatrix();
     friend ostream& operator <<(ostream&, const CMatrix&);
     bool addRow(string);
+    bool read();
+    bool reallocRows();
+    bool reallocCols();
 private:
-    static const unsigned defaultSize = 10;
+    static const unsigned defaultSize = 3;
     unsigned rows, cols;
     unsigned maxHeight, maxWidth;
     unsigned ** data;
@@ -36,7 +42,7 @@ CMatrix::CMatrix() {
 
 CMatrix::~CMatrix() {
     for (int i = 0; i < maxHeight; i++) {
-        delete data[i];
+        delete[] data[i];
     }
     delete[] data;
     data = NULL;
@@ -49,27 +55,73 @@ CMatrix::~CMatrix() {
 ostream& operator <<(ostream& out, const CMatrix& matrix) {
     for (int i = 0; i < matrix.rows; i++) {
         for (int j = 0; j < matrix.cols; j++) {
-            out << matrix.data[i][j] << " ";
+            out << setw(4) << matrix.data[i][j];
         }
         out << endl;
     }
     return out;
 }
 
-bool CMatrix::addRow(string line) {
+bool CMatrix::reallocCols() {
+    unsigned ** oldData = data;
+    maxWidth *= 2;
+    data = new unsigned*[maxHeight];
+    for (int i = 0; i < maxHeight; i++) {
+        data[i] = new unsigned[maxWidth];
+    }
+    //copy old data
+    for (int i = 0; i < cols; i++) {
+        data[0][i] = oldData[0][i];
+    }
+    //free old memory
+    for (int i = 0; i < maxHeight; i++) {
+        delete[] oldData[i];
+    }
+    delete[] oldData;
+    return 1;
+}
+
+bool CMatrix::reallocRows() {
+    unsigned ** oldData;
+    memcpy(&oldData, &data, sizeof (data));
+    unsigned oldHeight = maxHeight;
+    maxHeight *= 2;
+    data = new unsigned*[maxHeight];
+    for (int i = 0; i < rows; i++) {
+        *data[i] = *oldData[i];
+    }
+    delete [] oldData;
+    return 1;
+}
+
+bool CMatrix::addRow(string row) {
     unsigned x = 0;
     size_t current, next = -1;
     string colData;
-    do {        
+    do {
         current = next + 1;
-        next = line.find_first_of(" ", current);
-        colData = line.substr(current, next - current);
+        next = row.find_first_of(",", current);
+        colData = row.substr(current, next - current);        
+        if (rows && x > cols) return 0;
+        if (!rows && x == maxWidth) {
+            reallocCols();
+        }
+        if (!rows) cols++;
         data[rows][x] = atoi(colData.c_str());
-        x++;        
+        x++;
     } while (next != string::npos);
-    if(!rows) cols = x;
-    else if(x != cols) return 0;
+    if (rows && x != cols) return 0;
     rows++;
+    return 1;
+}
+
+bool CMatrix::read() {
+    string row;
+    while (!cin.eof()) {
+        getline(cin, row);
+        if (rows == maxHeight) reallocRows();
+        if (!addRow(row)) return 0;
+    }
     return 1;
 }
 
@@ -78,8 +130,11 @@ bool CMatrix::addRow(string line) {
  */
 int main(int argc, char** argv) {
     CMatrix testMatrix;
-    testMatrix.addRow("1 2 3 4\n");    
-    
+
+    //testMatrix.realocateRows();
+    testMatrix.addRow("1, 2, 3, 4\n");
+    cout << testMatrix << endl;
+    //testMatrix.realocateCols();
     cout << testMatrix << endl;
     return 0;
 }
