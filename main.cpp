@@ -53,6 +53,10 @@ CMatrix::~CMatrix() {
 }
 
 ostream& operator <<(ostream& out, const CMatrix& matrix) {
+    if(!matrix.cols || !matrix.rows) {
+        out << "Empty matrix" << endl;
+        return out;
+    }
     for (int i = 0; i < matrix.rows; i++) {
         for (int j = 0; j < matrix.cols; j++) {
             out << setw(4) << matrix.data[i][j];
@@ -133,9 +137,7 @@ int main(int argc, char** argv) {
 
     //testMatrix.realocateRows();
     testMatrix.addRow("1, 2, 3, 4\n");
-    cout << testMatrix << endl;
-    //testMatrix.realocateCols();
-    cout << testMatrix << endl;
+    cout << testMatrix << endl;        
     return 0;
 }
 
