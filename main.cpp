@@ -13,6 +13,10 @@
 
 using namespace std;
 
+struct TScore {
+    unsigned width, height, x, y, in;
+};
+
 class CMatrix {
 public:
     CMatrix();
@@ -27,6 +31,9 @@ private:
     unsigned rows, cols;
     unsigned maxHeight, maxWidth;
     unsigned ** data;
+    unsigned score;
+    TScore ** subscores;
+    unsigned subscoresRecords;
 };
 
 CMatrix::CMatrix() {
@@ -34,6 +41,7 @@ CMatrix::CMatrix() {
     maxWidth = defaultSize;
     cols = 0;
     rows = 0;
+    score = 0;
     data = new unsigned*[maxHeight];
     for (int i = 0; i < maxHeight; i++) {
         data[i] = new unsigned[maxWidth];
@@ -86,7 +94,7 @@ bool CMatrix::reallocCols() {
 }
 
 bool CMatrix::reallocRows() {
-    unsigned ** oldData = data;    
+    unsigned ** oldData = data;
     maxHeight *= 2;
     data = new unsigned*[maxHeight];
     for (int i = 0; i < maxHeight; i++) {
@@ -113,6 +121,7 @@ bool CMatrix::addRow(string row) {
         }
         if (!rows) cols++;
         data[rows][x] = atoi(colData.c_str());
+        score += data[rows][x];
         x++;
     } while (next != string::npos);
     if (rows && x != cols) return 0;
@@ -136,7 +145,7 @@ bool CMatrix::read() {
 int main(int argc, char** argv) {
     CMatrix testMatrix;
     testMatrix.read();
-    
+
     cout << testMatrix << endl;
     return 0;
 }
