@@ -23,7 +23,7 @@ public:
     bool reallocRows();
     bool reallocCols();
 private:
-    static const unsigned defaultSize = 3;
+    static const unsigned defaultSize = 2;
     unsigned rows, cols;
     unsigned maxHeight, maxWidth;
     unsigned ** data;
@@ -53,7 +53,7 @@ CMatrix::~CMatrix() {
 }
 
 ostream& operator <<(ostream& out, const CMatrix& matrix) {
-    if(!matrix.cols || !matrix.rows) {
+    if (!matrix.cols || !matrix.rows) {
         out << "Empty matrix" << endl;
         return out;
     }
@@ -86,15 +86,16 @@ bool CMatrix::reallocCols() {
 }
 
 bool CMatrix::reallocRows() {
-    unsigned ** oldData;
-    memcpy(&oldData, &data, sizeof (data));
-    unsigned oldHeight = maxHeight;
+    unsigned ** oldData = data;    
     maxHeight *= 2;
     data = new unsigned*[maxHeight];
-    for (int i = 0; i < rows; i++) {
-        *data[i] = *oldData[i];
+    for (int i = 0; i < maxHeight; i++) {
+        if (i < maxHeight / 2)
+            data[i] = oldData[i];
+        else
+            data[i] = new unsigned[maxWidth];
     }
-    delete [] oldData;
+    delete[] oldData;
     return 1;
 }
 
@@ -105,7 +106,7 @@ bool CMatrix::addRow(string row) {
     do {
         current = next + 1;
         next = row.find_first_of(",", current);
-        colData = row.substr(current, next - current);        
+        colData = row.substr(current, next - current);
         if (rows && x > cols) return 0;
         if (!rows && x == maxWidth) {
             reallocCols();
@@ -134,10 +135,9 @@ bool CMatrix::read() {
  */
 int main(int argc, char** argv) {
     CMatrix testMatrix;
-
-    //testMatrix.realocateRows();
-    testMatrix.addRow("1, 2, 3, 4\n");
-    cout << testMatrix << endl;        
+    testMatrix.read();
+    
+    cout << testMatrix << endl;
     return 0;
 }
 
