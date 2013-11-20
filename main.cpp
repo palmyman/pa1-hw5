@@ -26,6 +26,7 @@ public:
     bool read();
     bool reallocRows();
     bool reallocCols();
+    void evalSubscores();
 private:
     static const unsigned defaultSize = 2;
     unsigned rows, cols;
@@ -33,7 +34,8 @@ private:
     unsigned ** data;
     unsigned score;
     TScore ** subscores;
-    unsigned subscoresRecords;
+    unsigned subscoreRecords;
+    unsigned targetScore;
 };
 
 CMatrix::CMatrix() {
@@ -46,6 +48,8 @@ CMatrix::CMatrix() {
     for (int i = 0; i < maxHeight; i++) {
         data[i] = new unsigned[maxWidth];
     }
+    subscores = NULL;
+    subscoreRecords = 0;
 }
 
 CMatrix::~CMatrix() {
@@ -58,6 +62,8 @@ CMatrix::~CMatrix() {
     maxWidth = 0;
     rows = 0;
     cols = 0;
+    delete [] subscores;
+    subscoreRecords = 0;
 }
 
 ostream& operator <<(ostream& out, const CMatrix& matrix) {
@@ -139,12 +145,31 @@ bool CMatrix::read() {
     return 1;
 }
 
+void CMatrix::evalSubscores() {
+    targetScore = score / 2;
+    subscores = new TScore*[rows * rows * cols * cols];
+    for (int y = 0; y < rows; y++) {
+        for (int x = 0; x < cols; x++) {
+            for (int height = 1; y + height < rows; y++) {
+                for (int width = 1; x + width < cols; x++) {
+                    subscores[subscoreRecords]->x = x;
+                    subscores[subscoreRecords]->y = y;
+                    subscores[subscoreRecords]->height = height;
+                    subscores[subscoreRecords]->width = width;
+                    //TODO subscores[subscoreRecords]->in += data[][]
+                }
+            }
+        }
+    }
+}
+
 /*
  * 
  */
 int main(int argc, char** argv) {
     CMatrix testMatrix;
     testMatrix.read();
+    testMatrix.evalSubscores();
 
     cout << testMatrix << endl;
     return 0;
