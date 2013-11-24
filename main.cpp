@@ -27,13 +27,14 @@ public:
     bool reallocRows();
     bool reallocCols();
     void evalSubscores();
+    unsigned getScore();
 private:
-    static const unsigned defaultSize = 2;
+    static const unsigned defaultSize = 10;
     unsigned rows, cols;
     unsigned maxHeight, maxWidth;
     unsigned ** data;
-    unsigned score;
-    TScore ** subscores;
+    unsigned totalScore;
+    TScore * subscores;
     unsigned subscoreRecords;
     unsigned targetScore;
 };
@@ -43,7 +44,8 @@ CMatrix::CMatrix() {
     maxWidth = defaultSize;
     cols = 0;
     rows = 0;
-    score = 0;
+    totalScore = 0;
+    targetScore = 0;
     data = new unsigned*[maxHeight];
     for (int i = 0; i < maxHeight; i++) {
         data[i] = new unsigned[maxWidth];
@@ -76,6 +78,13 @@ ostream& operator <<(ostream& out, const CMatrix& matrix) {
             out << setw(4) << matrix.data[i][j];
         }
         out << endl;
+    }
+    
+    for (int i = 0; i < matrix.subscoreRecords; i++) {
+        out << matrix.subscores[i].width << " x " << matrix.subscores[i].height 
+            << " @ (" << matrix.subscores[i].x << ", " << matrix.subscores[i].y
+            << "): " << matrix.subscores[i].in << ", " << matrix.totalScore - matrix.subscores[i].in
+            << endl;        
     }
     return out;
 }
@@ -127,7 +136,7 @@ bool CMatrix::addRow(string row) {
         }
         if (!rows) cols++;
         data[rows][x] = atoi(colData.c_str());
-        score += data[rows][x];
+        totalScore += data[rows][x];
         x++;
     } while (next != string::npos);
     if (rows && x != cols) return 0;
@@ -146,21 +155,30 @@ bool CMatrix::read() {
 }
 
 void CMatrix::evalSubscores() {
-    targetScore = score / 2;
-    subscores = new TScore*[rows * rows * cols * cols];
+    subscores = new TScore[rows * rows * cols * cols];
     for (int y = 0; y < rows; y++) {
         for (int x = 0; x < cols; x++) {
-            for (int height = 1; y + height < rows; y++) {
-                for (int width = 1; x + width < cols; x++) {
-                    subscores[subscoreRecords]->x = x;
-                    subscores[subscoreRecords]->y = y;
-                    subscores[subscoreRecords]->height = height;
-                    subscores[subscoreRecords]->width = width;
-                    //TODO subscores[subscoreRecords]->in += data[][]
+            for (int height = 1; y + height - 1 < rows; height++) {
+                int rowScore = 0;
+                for (int width = 1; x + width - 1 < cols; width++) {
+                    unsigned lastRow;
+                    if(y) lastRow = subscores[subscoreRecords - cols + x].in;
+                    else lastRow = 0;
+                    rowScore =+ data[y + height - 1][x + width - 1];
+                    subscores[subscoreRecords].x = x;
+                    subscores[subscoreRecords].y = y;
+                    subscores[subscoreRecords].height = height;
+                    subscores[subscoreRecords].width = width;
+                    subscores[subscoreRecords].in = rowScore + lastRow;
+                    subscoreRecords++;
                 }
             }
         }
     }
+}
+
+unsigned CMatrix::getScore() {
+    return totalScore;
 }
 
 /*
