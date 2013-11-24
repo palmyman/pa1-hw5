@@ -36,7 +36,7 @@ private:
     unsigned totalScore;
     TScore * subscores;
     unsigned subscoreRecords;
-    unsigned targetScore;
+    unsigned targetDiff;
 };
 
 CMatrix::CMatrix() {
@@ -45,7 +45,7 @@ CMatrix::CMatrix() {
     cols = 0;
     rows = 0;
     totalScore = 0;
-    targetScore = 0;
+    targetDiff = 0;
     data = new unsigned*[maxHeight];
     for (int i = 0; i < maxHeight; i++) {
         data[i] = new unsigned[maxWidth];
@@ -69,18 +69,21 @@ CMatrix::~CMatrix() {
 }
 
 ostream& operator <<(ostream& out, const CMatrix& matrix) {
-    if (!matrix.cols || !matrix.rows) {
-        out << "Empty matrix" << endl;
-        return out;
-    }
-    for (int i = 0; i < matrix.rows; i++) {
-        for (int j = 0; j < matrix.cols; j++) {
-            out << setw(4) << matrix.data[i][j];
-        }
-        out << endl;
-    }
+//MATRIX PRINT
+//    if (!matrix.cols || !matrix.rows) {
+//        out << "Empty matrix" << endl;
+//        return out;
+//    }
+//    for (int i = 0; i < matrix.rows; i++) {
+//        for (int j = 0; j < matrix.cols; j++) {
+//            out << setw(4) << matrix.data[i][j];
+//        }
+//        out << endl;
+//    }
     
     for (int i = 0; i < matrix.subscoreRecords; i++) {
+        unsigned localDiff = (unsigned) abs((long int)matrix.subscores[i].in - (matrix.totalScore - matrix.subscores[i].in));
+        if (localDiff == matrix.targetDiff)
         out << matrix.subscores[i].width << " x " << matrix.subscores[i].height 
             << " @ (" << matrix.subscores[i].x << ", " << matrix.subscores[i].y
             << "): " << matrix.subscores[i].in << ", " << matrix.totalScore - matrix.subscores[i].in
@@ -155,6 +158,7 @@ bool CMatrix::read() {
 }
 
 void CMatrix::evalSubscores() {
+    targetDiff = totalScore - (totalScore - data[0][0]);
     subscores = new TScore[rows * rows * cols * cols];
     for (int y = 0; y < rows; y++) {
         for (int x = 0; x < cols; x++) {
@@ -164,12 +168,16 @@ void CMatrix::evalSubscores() {
                     unsigned lastRow;
                     if(y) lastRow = subscores[subscoreRecords - cols + x].in;
                     else lastRow = 0;
-                    rowScore =+ data[y + height - 1][x + width - 1];
+                    rowScore += data[y + height - 1][x + width - 1];
                     subscores[subscoreRecords].x = x;
                     subscores[subscoreRecords].y = y;
                     subscores[subscoreRecords].height = height;
                     subscores[subscoreRecords].width = width;
                     subscores[subscoreRecords].in = rowScore + lastRow;
+                    unsigned localDiff = (unsigned) abs((long int)subscores[subscoreRecords].in - (totalScore - subscores[subscoreRecords].in));
+                    if(localDiff < targetDiff)
+                        targetDiff = localDiff;                    
+                    cout << localDiff << endl;
                     subscoreRecords++;
                 }
             }
