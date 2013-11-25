@@ -13,10 +13,6 @@
 
 using namespace std;
 
-struct TScore {
-    unsigned width, height, x, y, in;
-};
-
 class CMatrix {
 public:
     CMatrix();
@@ -36,7 +32,7 @@ private:
     unsigned maxHeight, maxWidth;
     unsigned ** data;
     unsigned totalScore;
-    TScore * subscores;
+    unsigned * subscores;
     unsigned subscoreRecords;
     unsigned subscoreMaxRecords;
     unsigned targetDiff;
@@ -55,8 +51,8 @@ CMatrix::CMatrix() {
         data[i] = new unsigned[maxWidth];
     }
     subscoreMaxRecords = defaultSize;
-    subscores = new TScore[subscoreMaxRecords];
-    subscoreRecords = 0;    
+    subscores = new unsigned[subscoreMaxRecords];
+    subscoreRecords = 0;
     solutions = 0;
 }
 
@@ -90,15 +86,22 @@ ostream& operator <<(ostream& out, const CMatrix& matrix) {
     //    }
 
     out << "Vysledku: " << matrix.solutions << endl;
-    for (unsigned i = 0; i < matrix.subscoreRecords; i++) {
-        unsigned localDiff = (unsigned) abs((long int) matrix.subscores[i].in - (matrix.totalScore - matrix.subscores[i].in));
-        if (localDiff == matrix.targetDiff)
-            out << matrix.subscores[i].width << " x " << matrix.subscores[i].height
-                << " @ (" << matrix.subscores[i].x << ", " << matrix.subscores[i].y
-                << "): " << matrix.subscores[i].in << " : " << matrix.totalScore - matrix.subscores[i].in
-                << endl;
-
-    }
+    unsigned i = 0;
+    for (unsigned y = 0; y < matrix.rows; y++) {
+        for (unsigned x = 0; x < matrix.cols; x++) {
+            for (unsigned height = 1; y + height - 1 < matrix.rows; height++) {
+                for (unsigned width = 1; x + width - 1 < matrix.cols; width++) {
+                    unsigned localDiff = (unsigned) abs((long int) matrix.subscores[i] - (matrix.totalScore - matrix.subscores[i]));
+                    if (localDiff == matrix.targetDiff)
+                        out << width << " x " << height
+                            << " @ (" << x << ", " << y
+                            << "): " << matrix.subscores[i] << " : " << matrix.totalScore - matrix.subscores[i]
+                            << endl;
+                    i++;
+                }
+            }
+        }
+    }    
     return out;
 }
 
@@ -136,15 +139,11 @@ bool CMatrix::reallocRows() {
 }
 
 bool CMatrix::reallocSubscores() {
-    TScore * oldSubscores = subscores;
+    unsigned * oldSubscores = subscores;
     subscoreMaxRecords *= 2;
-    subscores = new TScore[subscoreMaxRecords];
+    subscores = new unsigned[subscoreMaxRecords];
     for (unsigned i = 0; i < subscoreRecords; i++) {
-        subscores[i].height = oldSubscores[i].height;
-        subscores[i].in = oldSubscores[i].in;
-        subscores[i].width = oldSubscores[i].width;
-        subscores[i].x = oldSubscores[i].x;
-        subscores[i].y = oldSubscores[i].y;
+        subscores[i] = oldSubscores[i];
     }
     delete[] oldSubscores;
     return 1;
@@ -215,17 +214,13 @@ void CMatrix::evalSubscores() {
             for (unsigned height = 1; y + height - 1 < rows; height++) {
                 unsigned rowScore = 0;
                 for (unsigned width = 1; x + width - 1 < cols; width++) {
-                    if(subscoreRecords > 0.9 * subscoreMaxRecords) reallocSubscores();
+                    if (subscoreRecords > 0.9 * subscoreMaxRecords) reallocSubscores();
                     unsigned lastRow;
-                    if (height > 1) lastRow = subscores[subscoreRecords - cols + x].in;
+                    if (height > 1) lastRow = subscores[subscoreRecords - cols + x];
                     else lastRow = 0;
                     rowScore += data[y + height - 1][x + width - 1];
-                    subscores[subscoreRecords].x = x;
-                    subscores[subscoreRecords].y = y;
-                    subscores[subscoreRecords].height = height;
-                    subscores[subscoreRecords].width = width;
-                    subscores[subscoreRecords].in = rowScore + lastRow;
-                    unsigned localDiff = (unsigned) abs((long int) subscores[subscoreRecords].in - (totalScore - subscores[subscoreRecords].in));
+                    subscores[subscoreRecords] = rowScore + lastRow;
+                    unsigned localDiff = (unsigned) abs((long int) subscores[subscoreRecords] - (totalScore - subscores[subscoreRecords]));
                     if (localDiff < targetDiff) {
                         targetDiff = localDiff;
                         solutions = 1;
