@@ -31,7 +31,7 @@ public:
     void evalSubscores();
     unsigned getScore();
 private:
-    static const unsigned defaultSize = 4;
+    static const unsigned defaultSize = 10;
     unsigned rows, cols;
     unsigned maxHeight, maxWidth;
     unsigned ** data;
