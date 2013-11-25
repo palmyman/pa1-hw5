@@ -47,7 +47,7 @@ CMatrix::CMatrix() {
     totalScore = 0;
     targetDiff = 0;
     data = new unsigned*[maxHeight];
-    for (int i = 0; i < maxHeight; i++) {
+    for (unsigned i = 0; i < maxHeight; i++) {
         data[i] = new unsigned[maxWidth];
     }
     subscores = NULL;
@@ -55,7 +55,7 @@ CMatrix::CMatrix() {
 }
 
 CMatrix::~CMatrix() {
-    for (int i = 0; i < maxHeight; i++) {
+    for (unsigned i = 0; i < maxHeight; i++) {
         delete[] data[i];
     }
     delete[] data;
@@ -69,25 +69,25 @@ CMatrix::~CMatrix() {
 }
 
 ostream& operator <<(ostream& out, const CMatrix& matrix) {
-//MATRIX PRINT
-//    if (!matrix.cols || !matrix.rows) {
-//        out << "Empty matrix" << endl;
-//        return out;
-//    }
-//    for (int i = 0; i < matrix.rows; i++) {
-//        for (int j = 0; j < matrix.cols; j++) {
-//            out << setw(4) << matrix.data[i][j];
-//        }
-//        out << endl;
-//    }
-    
-    for (int i = 0; i < matrix.subscoreRecords; i++) {
-        unsigned localDiff = (unsigned) abs((long int)matrix.subscores[i].in - (matrix.totalScore - matrix.subscores[i].in));
+    //MATRIX PRINT
+    //    if (!matrix.cols || !matrix.rows) {
+    //        out << "Empty matrix" << endl;
+    //        return out;
+    //    }
+    //    for (int i = 0; i < matrix.rows; i++) {
+    //        for (int j = 0; j < matrix.cols; j++) {
+    //            out << setw(4) << matrix.data[i][j];
+    //        }
+    //        out << endl;
+    //    }
+
+    for (unsigned i = 0; i < matrix.subscoreRecords; i++) {
+        unsigned localDiff = (unsigned) abs((long int) matrix.subscores[i].in - (matrix.totalScore - matrix.subscores[i].in));
         if (localDiff == matrix.targetDiff)
-        out << matrix.subscores[i].width << " x " << matrix.subscores[i].height 
-            << " @ (" << matrix.subscores[i].x << ", " << matrix.subscores[i].y
-            << "): " << matrix.subscores[i].in << ", " << matrix.totalScore - matrix.subscores[i].in
-            << endl;        
+            out << matrix.subscores[i].width << " x " << matrix.subscores[i].height
+                << " @ (" << matrix.subscores[i].x << ", " << matrix.subscores[i].y
+                << "): " << matrix.subscores[i].in << ", " << matrix.totalScore - matrix.subscores[i].in
+                << endl;
     }
     return out;
 }
@@ -96,15 +96,15 @@ bool CMatrix::reallocCols() {
     unsigned ** oldData = data;
     maxWidth *= 2;
     data = new unsigned*[maxHeight];
-    for (int i = 0; i < maxHeight; i++) {
+    for (unsigned i = 0; i < maxHeight; i++) {
         data[i] = new unsigned[maxWidth];
     }
     //copy old data
-    for (int i = 0; i < cols; i++) {
+    for (unsigned i = 0; i < cols; i++) {
         data[0][i] = oldData[0][i];
     }
     //free old memory
-    for (int i = 0; i < maxHeight; i++) {
+    for (unsigned i = 0; i < maxHeight; i++) {
         delete[] oldData[i];
     }
     delete[] oldData;
@@ -115,7 +115,7 @@ bool CMatrix::reallocRows() {
     unsigned ** oldData = data;
     maxHeight *= 2;
     data = new unsigned*[maxHeight];
-    for (int i = 0; i < maxHeight; i++) {
+    for (unsigned i = 0; i < maxHeight; i++) {
         if (i < maxHeight / 2)
             data[i] = oldData[i];
         else
@@ -126,7 +126,7 @@ bool CMatrix::reallocRows() {
 }
 
 bool CMatrix::addRow(string row) {
-    unsigned x = 0;
+    unsigned x = 0, value;
     size_t current, next = -1;
     string colData;
     do {
@@ -136,9 +136,11 @@ bool CMatrix::addRow(string row) {
         if (rows && x > cols) return 0;
         if (!rows && x == maxWidth) {
             reallocCols();
-        }
+        }        
+        value = atoi(colData.c_str());
+        if (value < 1) return 0;
         if (!rows) cols++;
-        data[rows][x] = atoi(colData.c_str());
+        data[rows][x] = value;
         totalScore += data[rows][x];
         x++;
     } while (next != string::npos);
@@ -160,13 +162,13 @@ bool CMatrix::read() {
 void CMatrix::evalSubscores() {
     targetDiff = totalScore - (totalScore - data[0][0]);
     subscores = new TScore[rows * rows * cols * cols];
-    for (int y = 0; y < rows; y++) {
-        for (int x = 0; x < cols; x++) {
-            for (int height = 1; y + height - 1 < rows; height++) {
-                int rowScore = 0;
-                for (int width = 1; x + width - 1 < cols; width++) {
+    for (unsigned y = 0; y < rows; y++) {
+        for (unsigned x = 0; x < cols; x++) {
+            for (unsigned height = 1; y + height - 1 < rows; height++) {
+                unsigned rowScore = 0;
+                for (unsigned width = 1; x + width - 1 < cols; width++) {
                     unsigned lastRow;
-                    if(y) lastRow = subscores[subscoreRecords - cols + x].in;
+                    if (y) lastRow = subscores[subscoreRecords - cols + x].in;
                     else lastRow = 0;
                     rowScore += data[y + height - 1][x + width - 1];
                     subscores[subscoreRecords].x = x;
@@ -174,10 +176,9 @@ void CMatrix::evalSubscores() {
                     subscores[subscoreRecords].height = height;
                     subscores[subscoreRecords].width = width;
                     subscores[subscoreRecords].in = rowScore + lastRow;
-                    unsigned localDiff = (unsigned) abs((long int)subscores[subscoreRecords].in - (totalScore - subscores[subscoreRecords].in));
-                    if(localDiff < targetDiff)
-                        targetDiff = localDiff;                    
-                    cout << localDiff << endl;
+                    unsigned localDiff = (unsigned) abs((long int) subscores[subscoreRecords].in - (totalScore - subscores[subscoreRecords].in));
+                    if (localDiff < targetDiff)
+                        targetDiff = localDiff;
                     subscoreRecords++;
                 }
             }
@@ -194,7 +195,11 @@ unsigned CMatrix::getScore() {
  */
 int main(int argc, char** argv) {
     CMatrix testMatrix;
-    testMatrix.read();
+    if (!testMatrix.read()) {
+        cout << "Nespravny vstup." << endl;
+        return 0;
+    }
+    
     testMatrix.evalSubscores();
 
     cout << testMatrix << endl;
