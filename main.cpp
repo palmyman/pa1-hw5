@@ -22,8 +22,9 @@ public:
     CMatrix();
     ~CMatrix();
     friend ostream& operator <<(ostream&, const CMatrix&);
-    bool addRow(string);
-    bool read();
+//    bool addRow(string);
+//    bool read();
+    bool readMatrix();
     bool reallocRows();
     bool reallocCols();
     void evalSubscores();
@@ -69,17 +70,17 @@ CMatrix::~CMatrix() {
 }
 
 ostream& operator <<(ostream& out, const CMatrix& matrix) {
-    //MATRIX PRINT
-    //    if (!matrix.cols || !matrix.rows) {
-    //        out << "Empty matrix" << endl;
-    //        return out;
-    //    }
-    //    for (int i = 0; i < matrix.rows; i++) {
-    //        for (int j = 0; j < matrix.cols; j++) {
-    //            out << setw(4) << matrix.data[i][j];
-    //        }
-    //        out << endl;
-    //    }
+    //    MATRIX PRINT
+    if (!matrix.cols || !matrix.rows) {
+        out << "Empty matrix" << endl;
+        return out;
+    }
+    for (unsigned i = 0; i < matrix.rows; i++) {
+        for (unsigned j = 0; j < matrix.cols; j++) {
+            out << setw(4) << matrix.data[i][j];
+        }
+        out << endl;
+    }
 
     for (unsigned i = 0; i < matrix.subscoreRecords; i++) {
         unsigned localDiff = (unsigned) abs((long int) matrix.subscores[i].in - (matrix.totalScore - matrix.subscores[i].in));
@@ -125,36 +126,60 @@ bool CMatrix::reallocRows() {
     return 1;
 }
 
-bool CMatrix::addRow(string row) {
-    unsigned x = 0, value;
-    size_t current, next = -1;
-    string colData;
-    do {
-        current = next + 1;
-        next = row.find_first_of(",", current);
-        colData = row.substr(current, next - current);
-        if (rows && x > cols) return 0;
-        if (!rows && x == maxWidth) {
-            reallocCols();
-        }        
-        value = atoi(colData.c_str());
-        if (value < 1) return 0;
-        if (!rows) cols++;
-        data[rows][x] = value;
-        totalScore += data[rows][x];
-        x++;
-    } while (next != string::npos);
-    if (rows && x != cols) return 0;
-    rows++;
-    return 1;
-}
+//bool CMatrix::addRow(string row) {
+//    unsigned x = 0, value;
+//    size_t current, next = -1;
+//    string colData;
+//    do {
+//        current = next + 1;
+//        next = row.find_first_of(",", current);
+//        colData = row.substr(current, next - current);
+//        if (rows && x > cols) return 0;
+//        if (!rows && x == maxWidth) {
+//            reallocCols();
+//        }
+//        value = atoi(colData.c_str());
+//        if (value < 1) return 0;
+//        if (!rows) cols++;
+//        data[rows][x] = value;
+//        totalScore += data[rows][x];
+//        x++;
+//    } while (next != string::npos);
+//    if (rows && x != cols) return 0;
+//    rows++;
+//    return 1;
+//}
+//
+//bool CMatrix::read() {
+//    string row;
+//    while (!cin.eof()) {
+//        getline(cin, row);
+//        if (rows == maxHeight) reallocRows();
+//        if (!addRow(row)) return 0;
+//    }
+//    return 1;
+//}
 
-bool CMatrix::read() {
-    string row;
-    while (!cin.eof()) {
-        getline(cin, row);
+bool CMatrix::readMatrix() {
+    cout << "Zadejte matici:" << endl;
+    unsigned value, checkSum, readingCol = 0;
+    char separator;
+    while (EOF != (checkSum = scanf("%u%c", &value, &separator))) {
+        if ((separator != ',' && separator != '\n') ||
+                checkSum != 2 ||
+                value < 1 ||
+                (rows && readingCol >= cols)) return 0;        
+        if (!rows && readingCol == maxWidth) reallocCols();
         if (rows == maxHeight) reallocRows();
-        if (!addRow(row)) return 0;
+        data[rows][readingCol] = value;
+        totalScore += value;
+        if(separator == ',') readingCol++;
+        else {
+            if(!rows) cols = readingCol + 1;
+            else if(cols != readingCol + 1) return 0;
+            rows++;            
+            readingCol = 0;
+        }
     }
     return 1;
 }
@@ -194,12 +219,12 @@ unsigned CMatrix::getScore() {
  * 
  */
 int main(int argc, char** argv) {
-    CMatrix testMatrix;
-    if (!testMatrix.read()) {
+    CMatrix testMatrix;    
+    if (!testMatrix.readMatrix()) {
         cout << "Nespravny vstup." << endl;
         return 0;
     }
-    
+
     testMatrix.evalSubscores();
 
     cout << testMatrix << endl;
