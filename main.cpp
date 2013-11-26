@@ -27,7 +27,7 @@ public:
     bool reallocRows();
     bool reallocCols();
     bool reallocSubscores();
-    void evalSubscores();
+    bool evalSubscores();
     unsigned getScore();
 private:
     static const unsigned defaultSize = 2;
@@ -186,29 +186,30 @@ bool CMatrix::readMatrix() {
         if ((separator != ',' && separator != '\n') ||
                 checkSum != 2 ||
                 value < 1 ||
-                (rows && readingCol >= cols)) 
+                (rows && readingCol >= cols))
             return 0;
-        if (!rows && readingCol == maxWidth) reallocCols();
+        if (readingCol == maxWidth) reallocCols();
         if (rows == maxHeight) reallocRows();
         if (!rows) cols++;
         data[rows][readingCol] = value;
         totalScore += value;
         if (separator == ',') readingCol++;
         else {
-            if (rows && cols != readingCol + 1) 
+            if (rows && cols != readingCol + 1)
                 return 0;
             rows++;
             readingCol = 0;
         }
     }
     targetDiff = totalScore;
-    if (rows + cols < 3 || separator != '\n') 
+    if (rows + cols < 3 || separator != '\n')
         return 0;
     return 1;
 }
 
-void CMatrix::evalSubscores() {
+bool CMatrix::evalSubscores() {
     unsigned * buffer = new unsigned[cols];
+    unsigned localScore;
     for (unsigned y = 0; y < rows; y++) {
         for (unsigned x = 0; x < cols; x++) {
             for (unsigned height = 1; y + height - 1 < rows; height++) {
@@ -220,13 +221,13 @@ void CMatrix::evalSubscores() {
                     if (height > 1) lastRow = buffer[modI];
                     else lastRow = 0;
                     rowScore += data[y + height - 1][x + width - 1];
-                    unsigned localScore = rowScore + lastRow;
+                    localScore = rowScore + lastRow;
                     buffer[modI] = localScore;
                     unsigned localDiff = (unsigned) abs((long int) localScore - (totalScore - localScore));
                     if (localDiff < targetDiff) {
                         targetDiff = localDiff;
                         subscoreRecords = 0;
-                        subscoreMaxRecords = defaultSize;                        
+                        subscoreMaxRecords = defaultSize;
                     }
                     if (localDiff == targetDiff) {
                         subscores[subscoreRecords].x = x;
@@ -237,11 +238,19 @@ void CMatrix::evalSubscores() {
                         subscoreRecords++;
                     }
                     modI++;
+                    if (localScore > totalScore / 2 + targetDiff) {
+                        break;
+                    }
                 }
+            }
+            if (!x && localScore < totalScore / 2 - targetDiff) {
+                delete [] buffer;
+                return 0;
             }
         }
     }
     delete [] buffer;
+    return 1;
 }
 
 unsigned CMatrix::getScore() {
