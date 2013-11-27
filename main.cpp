@@ -223,7 +223,7 @@ bool CMatrix::evalSubscores() {
                     rowScore += data[y + height - 1][x + width - 1];
                     localScore = rowScore + lastRow;
                     buffer[modI] = localScore;
-                    unsigned localDiff = (unsigned) abs((long int) localScore - (totalScore - localScore));
+                    unsigned localDiff = (unsigned) abs((long int) (localScore - (totalScore - localScore)));
                     if (localDiff < targetDiff) {
                         targetDiff = localDiff;
                         subscoreRecords = 0;
