@@ -124,3 +124,4 @@ Poznámky
 + Nepoužívejte C++ knihovnu STL (vector, list, ...). Účelem je procvičit dynamickou alokaci paměti v C. STL budete používat v předmětu PA2, v PA1 je použití STL zakázané. Pokud přesto STL použijete, Váš program nepůjde přeložit.
 + V jednom z testů se kontrolují přístupy do paměti a kontroluje se uvolňování dynamicky alokované paměti. Pokud dynamicky alokovanou paměť neuvolníte, bude Váš výsledek zatížen bodovým malusem.
 + Pořadí nalezených podmatic na výstupu není podstatné. Při porovnání výsledků si testovací prostředí v případě potřeby řádky prohází.
++ Test pro matouše
